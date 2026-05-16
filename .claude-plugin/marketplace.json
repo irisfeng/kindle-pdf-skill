@@ -1,0 +1,25 @@
+{
+  "name": "kindle-pdf-skill",
+  "version": "1.0.0",
+  "description": "Fix the technical-PDF-on-Kindle disaster — matrices, code, and equations stay intact.",
+  "author": {
+    "name": "偷泥方",
+    "url": "https://github.com/irisfeng"
+  },
+  "homepage": "https://github.com/irisfeng/kindle-pdf-skill",
+  "repository": "https://github.com/irisfeng/kindle-pdf-skill",
+  "license": "MIT",
+  "plugins": [
+    {
+      "name": "kindle-pdf-skill",
+      "description": "Convert oversized technical PDFs into Kindle-friendly form without destroying code/table/matrix/equation layout.",
+      "source": {
+        "type": "github",
+        "repo": "irisfeng/kindle-pdf-skill"
+      },
+      "skills": [
+        "skills/kindle-pdf-skill"
+      ]
+    }
+  ]
+}

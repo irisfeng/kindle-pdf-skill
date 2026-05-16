@@ -1,0 +1,15 @@
+# OS / editor cruft
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*~
+
+# Local-only test outputs
+*.tmp.pdf
+/tmp_outputs/
+
+# Python (if anyone runs the example scripts)
+__pycache__/
+*.pyc
+.venv/
