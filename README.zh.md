@@ -13,10 +13,15 @@
 你下载了一本好书——比如 Sebastian Raschka 的《Build a Large Language Model (From Scratch)》。你把 PDF 拷到 6 寸 Kindle 上打开，看到的是这个：
 
 <p align="center">
-  <img src="./assets/before-kindle-disaster.jpg" alt="Kindle PDF 重排灾难：原本的二维表格被打散成单列竖排文字" width="320">
+  <img src="./assets/before-kindle-disaster.jpg" alt="处理前：Kindle PDF 重排灾难——二维表格被打散成单列竖排" width="300">
+  &nbsp;&nbsp;&nbsp;
+  <img src="./assets/after-kindle-readable.jpg" alt="处理后：同一本书，k2pdfopt 优化——图、向量、图注一气呵成" width="300">
 </p>
+<p align="center"><em>左：Kindle 原生 PDF 重排。右：同一本书，经过这个 skill 处理。</em></p>
 
-一个二维表格被打散成了单列竖排：`3`、`the first token ID`、`over`、`5`、`dog`、`1`、`1.2753`——每个格子各占一行。公式被切碎。代码缩进消失。**这本书没法读了。**
+左边，一个二维表格被打散成了单列竖排：`3`、`the first token ID`、`over`、`5`、`dog`、`1`、`1.2753`——每个格子各占一行。公式被切碎。代码缩进消失。**这本书没法读了。**
+
+右边，是同一本书经过这个 skill 处理之后的样子：三行带向量标注的示意图（`[1.23, -0.31, 0.89]` …）作为整体保留，图注紧跟其下，章节标题和页码各就各位。
 
 这不是 Kindle 的错，是个根本性的尺寸冲突：
 

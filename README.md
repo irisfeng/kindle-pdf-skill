@@ -13,10 +13,15 @@ An [Agent Skill](https://docs.claude.com/en/api/agent-skills) that teaches Claud
 You found a great technical book — say, *Build a Large Language Model (From Scratch)* by Sebastian Raschka. You copy the PDF to your 6-inch Kindle. You open it. This happens:
 
 <p align="center">
-  <img src="./assets/before-kindle-disaster.jpg" alt="Kindle PDF reflow disaster: a 2D table is fragmented into single-column vertical text" width="320">
+  <img src="./assets/before-kindle-disaster.jpg" alt="Before: Kindle PDF reflow disaster — a 2D table fragmented into single-column vertical text" width="300">
+  &nbsp;&nbsp;&nbsp;
+  <img src="./assets/after-kindle-readable.jpg" alt="After: same book, k2pdfopt-optimized — figure, vectors, and caption all intact" width="300">
 </p>
+<p align="center"><em>Left: stock Kindle PDF reflow. Right: same book after this skill.</em></p>
 
-A 2D table has been shredded into a single column. Each cell — `3`, `the first token ID`, `over`, `5`, `dog`, `1`, `1.2753` — is on its own line. Equations are torn apart. Code indentation is gone. **The book is unreadable.**
+On the left, a 2D table has been shredded into a single column. Each cell — `3`, `the first token ID`, `over`, `5`, `dog`, `1`, `1.2753` — is on its own line. Equations are torn apart. Code indentation is gone. **The book is unreadable.**
+
+On the right, the same book after running this skill: a multi-row figure with three labeled embedding vectors (`[1.23, -0.31, 0.89]` …) stays atomic, the caption flows under it, and the chapter heading and page number land exactly where they should.
 
 This isn't your Kindle's fault. It's a fundamental mismatch:
 
