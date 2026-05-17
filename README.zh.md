@@ -10,26 +10,27 @@
 
 ## 痛点
 
-你下载了一本好书——比如 Sebastian Raschka 的《Build a Large Language Model (From Scratch)》。你把 PDF 拷到 6 寸 Kindle 上打开，看到的是这个：
+你下载了一本好书——比如 Sebastian Raschka 的《Build a Large Language Model (From Scratch)》。PDF 是 Letter 大小的砖头，每页约 7.4 × 9.2 英寸。你想用 6 寸 Kindle 看。
+
+你有两个"显而易见"的选择。两个都失败：
+
+1. **直接把原 PDF 拷进 Kindle**。能打开，能看。但字**小到爆**——整页 7.4 寸的版面被压缩到 3.5 寸可用宽度。眯眼、双指放大、放弃。
+2. **把 PDF 转成 AZW3 / MOBI**（用 Calibre、Send-to-Kindle 邮箱等）。字号正常了，能重排了。但所有二维结构**全毁了**：
 
 <p align="center">
-  <img src="./assets/before-kindle-disaster.jpg" alt="处理前：Kindle PDF 重排灾难——二维表格被打散成单列竖排" width="300">
+  <img src="./assets/before-kindle-disaster.jpg" alt="处理前：PDF 转 AZW3 后的重排灾难——二维表格被打散成单列竖排" width="300">
   &nbsp;&nbsp;&nbsp;
-  <img src="./assets/after-kindle-readable.jpg" alt="处理后：同一本书，k2pdfopt 优化——图、向量、图注一气呵成" width="300">
+  <img src="./assets/after-kindle-readable.jpg" alt="处理后：同一本书，本 skill 的 k2pdfopt 优化版 PDF——图、向量、图注一气呵成" width="300">
 </p>
-<p align="center"><em>左：Kindle 原生 PDF 重排。右：同一本书，经过这个 skill 处理。</em></p>
+<p align="center"><em>左：PDF 转成 AZW3。右：同一本书，本 skill 优化后的 PDF。</em></p>
 
-左边，一个二维表格被打散成了单列竖排：`3`、`the first token ID`、`over`、`5`、`dog`、`1`、`1.2753`——每个格子各占一行。公式被切碎。代码缩进消失。**这本书没法读了。**
+左边（AZW3 版），一个二维表格被打散成了单列竖排：`3`、`the first token ID`、`over`、`5`、`dog`、`1`、`1.2753`——每个格子各占一行。公式被切碎。代码缩进消失。**这本书没法读了。**
 
-右边，是同一本书经过这个 skill 处理之后的样子：三行带向量标注的示意图（`[1.23, -0.31, 0.89]` …）作为整体保留，图注紧跟其下，章节标题和页码各就各位。
+右边（本 skill 输出的 PDF），三行带向量标注的示意图（`[1.23, -0.31, 0.89]` …）作为整体保留，图注紧跟其下，章节标题和页码各就各位。
 
-这不是 Kindle 的错，是个根本性的尺寸冲突：
+根本原因：**AZW3 / MOBI / EPUB 都是可重排格式**。转换器必须把 PDF 抽成一条线性的文本流。所有住在二维网格里的东西——代码块、矩阵、表格、公式、并排插图——都会被序列化成一坨意义不明的字符。
 
-- 技术 PDF 是按 **Letter / B5 纸**排版的（~7-8 英寸宽）
-- 6 寸 Kindle 屏幕**可用宽度只有 ~3.5 英寸**
-- Kindle 的两种显示模式都救不了：
-  - **原始模式**：字太小看不清
-  - **重排模式**：Kindle 试图把内容压成单列文本流，把二维结构全毁了
+解法不是换个格式转。解法是**让 PDF 保持是 PDF**，只是把它的每一页重新切到适合 6 寸屏幕的大小。
 
 ## 解决方案
 

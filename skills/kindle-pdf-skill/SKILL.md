@@ -23,14 +23,16 @@ Load when the user asks any of:
 
 Especially when the PDF is a technical book (ML, math, CS) with matrices, code blocks, tables, or formulas — these are the cases where naïve approaches fail catastrophically.
 
-## Root cause: why Kindle PDFs look terrible
+## Root cause: why technical PDFs look terrible on small Kindles
 
-A 6-inch Kindle screen is ~90×120mm. A typical technical PDF page is 7-8 inches wide (Letter or B5). Kindle gives two bad options:
+A 6-inch Kindle screen is ~90×120mm. A typical technical PDF page is 7-8 inches wide (Letter or B5). The user has two "obvious" options, **both bad**:
 
-1. **Original mode (1:1)** — text becomes too small to read, requires constant zoom+pan.
-2. **Reflow mode** — Kindle tries to extract text and re-flow it into one column. This **destroys tables, matrices, code, equations**. The user's diagnostic symptom: rows like `3 / the first token ID / over / 5 / dog / 1 / 1.2753` where each cell of a 2D table becomes a separate line.
+1. **Keep it as PDF, drop onto Kindle (1:1 / "Original" mode)** — text becomes too small to read. Kindle's PDF view is fixed-layout; pinch-zoom/pan works but is miserable for a whole book.
+2. **Convert PDF → AZW3 / MOBI / EPUB** (Calibre, Send-to-Kindle email, ebook-convert, etc.) — text becomes the right size and reflows, **BUT every 2D structure is destroyed**: tables, matrices, code blocks, equations, side-by-side figures all get serialized into a single linear text stream. The user's diagnostic symptom: rows like `3 / the first token ID / over / 5 / dog / 1 / 1.2753` where each cell of a 2D table lands on its own line.
 
-**The reflow disaster is the #1 complaint and the giveaway diagnostic.** If the user shows a screenshot with single-column-vertical-data, that's exactly this problem.
+**The reflowable-format conversion disaster is the #1 complaint and the giveaway diagnostic.** If the user shows a screenshot with single-column-vertical-data fragments, that almost always means they tried to convert the PDF to AZW3/MOBI/EPUB (or used Kindle's experimental PDF reflow mode, which has the same effect). Don't let them go further down that path.
+
+**The fix is NOT to find a better reflowable format.** The fix is to **keep the PDF as a PDF** and re-cut its pages to fit the 6-inch screen — which is exactly what k2pdfopt does.
 
 ## Diagnostic checklist (do this first)
 

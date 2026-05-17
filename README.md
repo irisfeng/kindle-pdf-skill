@@ -10,26 +10,27 @@ An [Agent Skill](https://docs.claude.com/en/api/agent-skills) that teaches Claud
 
 ## The Problem
 
-You found a great technical book — say, *Build a Large Language Model (From Scratch)* by Sebastian Raschka. You copy the PDF to your 6-inch Kindle. You open it. This happens:
+You found a great technical book — say, *Build a Large Language Model (From Scratch)* by Sebastian Raschka. The PDF is a Letter-sized brick, ~7.4 × 9.2 inches per page. You want to read it on your 6-inch Kindle.
+
+You have two "obvious" options. Both fail:
+
+1. **Drop the original PDF onto the Kindle.** It opens. It's readable. But the text is *tiny* — the entire 7.4-inch page squeezed onto a 3.5-inch usable column. You squint, you pinch-zoom, you give up.
+2. **Convert PDF → AZW3 / MOBI (e.g. Calibre, Send-to-Kindle email).** Now the text is the right size and reflows. But every 2D structure is **destroyed**:
 
 <p align="center">
-  <img src="./assets/before-kindle-disaster.jpg" alt="Before: Kindle PDF reflow disaster — a 2D table fragmented into single-column vertical text" width="300">
+  <img src="./assets/before-kindle-disaster.jpg" alt="Before: PDF→AZW3 reflow disaster — a 2D table fragmented into single-column vertical text" width="300">
   &nbsp;&nbsp;&nbsp;
-  <img src="./assets/after-kindle-readable.jpg" alt="After: same book, k2pdfopt-optimized — figure, vectors, and caption all intact" width="300">
+  <img src="./assets/after-kindle-readable.jpg" alt="After: same book, k2pdfopt-optimized PDF — figure, vectors, and caption all intact" width="300">
 </p>
-<p align="center"><em>Left: stock Kindle PDF reflow. Right: same book after this skill.</em></p>
+<p align="center"><em>Left: PDF converted to AZW3. Right: same book, this skill's k2pdfopt-optimized PDF.</em></p>
 
-On the left, a 2D table has been shredded into a single column. Each cell — `3`, `the first token ID`, `over`, `5`, `dog`, `1`, `1.2753` — is on its own line. Equations are torn apart. Code indentation is gone. **The book is unreadable.**
+On the left (AZW3 conversion), a 2D table has been shredded into a single column. Each cell — `3`, `the first token ID`, `over`, `5`, `dog`, `1`, `1.2753` — is on its own line. Equations are torn apart. Code indentation is gone. **The book is unreadable.**
 
-On the right, the same book after running this skill: a multi-row figure with three labeled embedding vectors (`[1.23, -0.31, 0.89]` …) stays atomic, the caption flows under it, and the chapter heading and page number land exactly where they should.
+On the right (this skill's output, still a PDF), a multi-row figure with three labeled embedding vectors (`[1.23, -0.31, 0.89]` …) stays atomic, the caption flows under it, and the chapter heading and page number land exactly where they should.
 
-This isn't your Kindle's fault. It's a fundamental mismatch:
+The root cause: **AZW3 / MOBI / EPUB are reflowable formats**. The converter has to extract a single linear text stream from your PDF. Anything that lives in a 2D grid — code blocks, matrices, tables, equations, side-by-side figures — gets serialized into nonsense.
 
-- Technical PDFs are typeset for **Letter / B5** paper (~7-8 inches wide)
-- A 6-inch Kindle screen is **~3.5 inches** of usable width
-- Kindle's two display modes both fail:
-  - **Original mode**: text is too small to read
-  - **Reflow mode**: Kindle tries to extract a single text stream, destroying every 2D structure
+The fix isn't to convert to a different format. The fix is to **keep the PDF as a PDF**, and just re-cut its pages to fit a 6-inch screen.
 
 ## The Solution
 
