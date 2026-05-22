@@ -1,7 +1,7 @@
 ---
 name: kindle-pdf-skill
 description: Reflow/optimize PDFs for small e-readers (Kindle 6", Kobo, etc.) so technical books with code/tables/equations stay readable. Covers k2pdfopt, Calibre, and Kindle device settings.
-version: 1.0.0
+version: 1.1.0
 author: 偷泥方 (irisfeng)
 license: MIT
 homepage: https://github.com/irisfeng/kindle-pdf-skill
@@ -11,7 +11,7 @@ metadata:
     related_skills: []
 ---
 
-# Kindle PDF Skill
+# E-reader PDF Optimization
 
 ## When to load this skill
 
@@ -108,7 +108,13 @@ k2pdfopt "input.pdf" -ui- -x -dev kp3 -mode fp -o "output_novel.pdf"
 | Page turn frequency | More frequent | Normal |
 | Best for | Eyes that need biggest text | Standard reading posture |
 
-**Default recommendation: produce the portrait (`-ls-`) version first.** Most users want normal posture. If they say "font is too small" after testing, regenerate with `-fs 1.2` or offer the landscape variant.
+**Default recommendation depends on content type and device size:**
+
+- **6" device (PW1-PW4) + technical book with code/tables/equations** → **landscape (NO `-ls-`) is the default.** Portrait + `-fs` cannot deliver enough text size for ML/math books at this screen size — physics, not preference. See `references/physical-zoom-limits.md`. User holds Kindle sideways but reads comfortably.
+- **6" device + prose-heavy book** → portrait (`-ls-`) is fine; reflow tools (Calibre AZW3) may actually be better here.
+- **6.8"+ device (PW5, Signature, Oasis, Scribe)** → portrait (`-ls-`) usually works even for technical content. Try it first.
+
+If they specifically refuse landscape posture on 6" device for technical content, be honest: tell them the upper bound of comfort is what `-fs 1.15` produces in portrait mode, and the durable fix is a bigger device. Don't promise a "one more flag will fix it" outcome — there isn't one.
 
 **Critical flags — read carefully, this is where session-after-session gets burned:**
 
@@ -126,7 +132,7 @@ k2pdfopt "input.pdf" -ui- -x -dev kp3 -mode fp -o "output_novel.pdf"
 - `-n` — keep native PDF text (selectable + searchable on Kindle). Without `-n` the output is bitmap (smaller file, no text selection).
 - `-rt 0` — *intended* to force no rotation. **In `-mode fitwidth` with a large source page, this flag is effectively ignored** — k2pdfopt still rotates content to fit the narrow device. Don't bother re-running with `-rt 0` if your first output looks "rotated" in a viewer; see the rotation pitfall below. **Use `-ls-` instead** — that's the actual correct flag for "keep content upright on a portrait-held device."
 - `-ls-` — **THE correct flag for portrait-orientation output.** Forces k2pdfopt to NOT rotate content into landscape. Without it, fitwidth rotates content sideways to maximize text width; with it, the content stays upright and each source page becomes ~1 device page (text is smaller, but Kindle is held normally). This is the parameter to reach for when the user complains about "having to hold Kindle sideways."
-- `-fs <factor>` — font scaling. `-fs 1.2` = 20% bigger. Use when `-ls-` portrait output produces text that's too small. Tradeoff: more page breaks.
+- `-fs <factor>` — font scaling. `-fs 1.2` = "20% bigger" *nominally*. **READ THE NEXT PITFALL** before promising the user this will fix small text — on a 6" Kindle reading a 7-8" wide technical PDF, `-fs` only buys you ~10-15% perceived gain before it hits a hard wall, because the page width is already fully consumed by fitting one full source row into 758px. Tradeoff: more page breaks. See `references/physical-zoom-limits.md` for the math and the symptom: "I added -fs 1.25 but the text didn't actually get bigger."
 
 A 300-400 page book takes 5-15 minutes on Apple Silicon; expect output to be 700-900 pages and 40-80 MB after `fitwidth` doubles the page count.
 
@@ -170,6 +176,8 @@ Is the PDF a novel / mostly prose?
 
 ## Pitfalls
 
+- **THE BIG ONE: `-fs N` does not give you N× bigger text on a 6" Kindle reading a 7-8" technical PDF.** A 758-pixel-wide 6" screen showing a 7.4" wide source page is already fitting ~90 source-page characters into 758 pixels — every character is already at minimum-readable size. `-fs 1.25` cannot magically widen the device; in `-mode fitwidth -ls-` (portrait, one source page → one device page) it produces only a marginal increase (~10-15% perceived), not 25%. **If a user says "I added -fs 1.25 but the text didn't actually get bigger" — believe them, this is the physics, not user error.** The only ways to actually get +20-30% text on a 6" device reading a wide technical PDF are: (a) drop `-ls-` so each source page splits into 2-3 landscape sub-pages (user holds Kindle sideways, text is much bigger), (b) accept horizontal slicing that breaks code-line / table-row integrity, or (c) move to a 6.8"+ device. There is no fourth option — `-fs` alone won't get you there. Full math + measurements in `references/physical-zoom-limits.md`.
+- **For technical books on 6" devices, default to recommending landscape output (NO `-ls-`).** The previous default in this skill was portrait + `-fs 1.2` to "keep normal posture." In practice users come back and say "still too small." Landscape posture trades reading ergonomics for ~35% bigger text and is the durable answer for ML/math books on PW1-PW4 (6" screens). Mention the tradeoff explicitly so they choose with eyes open — but don't bury landscape as "alternative." Make it the headline option for technical content on 6" devices.
 - **`-mode copy` does NOT split pages — it only crops white margins.** Despite the name suggesting "copy to device size," it renders at original page size. If source is 7×9" and device is 6", the output is still too big. **Use `-mode fitwidth` for actual device-sized splitting.** This is the single most common k2pdfopt mistake.
 - **`-dev` presets assume a modern device.** `-dev kp3` bakes in 1072×1448 @ 300ppi; on an older PW1/PW2 (758×1024 @ 212ppi) the resulting sub-pages are still oversized. Prefer explicit `-h/-w/-dpi` once you know the actual device generation.
 - **macOS quarantine kills manually-downloaded binaries silently.** First run of `~/Downloads/k2pdfopt` fails with a Gatekeeper dialog. Always `xattr -d com.apple.quarantine` + `chmod +x` before running.
@@ -178,7 +186,7 @@ Is the PDF a novel / mostly prose?
 - **PDF page size ≠ device size.** Always check both with `mdls`/`pdfinfo` before recommending a conversion approach.
 - **Brew has no k2pdfopt formula** (as of last check). Don't try `brew install k2pdfopt` — it 404s.
 - **iCloud Drive paths**: user's books may live at `~/Library/Mobile Documents/com~apple~CloudDocs/...`. Quote the path; spaces and `~` expand correctly only when quoted.
-- **The reflow-disaster screenshot is the diagnostic.** If the user sends a Kindle photo showing single-column vertical data fragments, you don't need any other evidence — go straight to k2pdfopt recommendation.
+- **The reflow-disaster screenshot is the diagnostic — but ask about origin before assuming cause.** If the user sends a Kindle photo showing single-column vertical data fragments, that almost always means they ran the PDF through a **PDF→AZW3/MOBI/EPUB converter** (Calibre, Send-to-Kindle email, ebook-convert) — NOT that Kindle's native PDF viewer mangled it. Kindle's native PDF mode is fixed-layout and renders the original PDF as-is (text just looks tiny on 6"); it does not auto-reflow into single columns. **Before launching into k2pdfopt, confirm: "Is this the original PDF on Kindle, or did you convert it to AZW3/MOBI first?"** The fix is the same (k2pdfopt on the original PDF), but the explanation you give the user must match reality — otherwise they'll think the problem is their Kindle and consider buying a new one. Full write-up in `references/diagnostic-attribution.md`.
 - **Transferring to old Kindle (Paperwhite 1/2):** Send-to-Kindle email/cloud features are unreliable on these vintages. The durable path is USB — plug into Mac, the Kindle mounts as a disk named `Kindle`, drag the PDF into `documents/`, eject. Tell the user to set the PDF to "Actual Size" / "Original" view on-device (not Reflow) since k2pdfopt already did the work.
 - **DO NOT tell the user to email the k2pdfopt-optimized PDF via Send-to-Kindle.** Amazon's Send-to-Kindle service auto-converts PDFs (to AZW/KFX on older firmware, or re-processes them), which will destroy the careful page slicing k2pdfopt did. The user will get the matrix-explosion / formula-fragmentation disaster all over again. **USB transfer only** for k2pdfopt outputs.
 - **Don't recommend converting to .mobi / .azw3 / .epub for technical PDFs.** Users sometimes ask "do I need to convert PDF to mobi for Kindle?" The answer is NO — Kindle reads PDF natively. Mobi/AZW3/EPUB are reflowable formats; converting a technical book to them destroys code indentation, matrix alignment, and equation layout. The right answer for technical PDFs is "keep it as PDF, but use k2pdfopt to make it Kindle-sized."
@@ -188,8 +196,18 @@ Is the PDF a novel / mostly prose?
   2. `pdftoppm -r 100 -f N -l N <pdf> /tmp/preview -png` then ask vision a *specific* question: "scanning left-to-right across a row, do you see complete English sentences or single stacked letters?" If complete sentences → correct orientation. The generic "is this rotated?" question is unreliable.
   3. Trust the device. k2pdfopt outputs are reliably oriented; if metadata says narrow+tall, ship it.
 
+- **k2pdfopt errors out "File or folder - could not be opened" partway through a long book.** Symptom: partial output PDF, "0 pages saved" for some source pages, exit code 0 but error message printed. Root cause: source PDF contains objects (font subsets, image dictionaries, etc.) MuPDF can't render cleanly. **Fix: pass the source through ghostscript first**, then feed the cleaned PDF to k2pdfopt:
+  ```bash
+  gs -o clean.pdf -sDEVICE=pdfwrite -dPDFSETTINGS=/prepress \
+     -dCompatibilityLevel=1.5 source.pdf
+  k2pdfopt clean.pdf [...other flags...]
+  ```
+  `qpdf --linearize` alone is NOT always enough — gs's full re-render is. See `references/physical-zoom-limits.md` for the session where this happened on Raschka's *Build a LLM From Scratch*.
+
 ## See also
 
 - `references/k2pdfopt-flags.md` — full flag reference and device codes
+- `references/physical-zoom-limits.md` — **read this when user says "text is still too small after running k2pdfopt"** on a 6" device. Includes math, real measurements from the Raschka LLM book, and the durable answer (landscape, not flag tuning).
+- `references/diagnostic-attribution.md` — distinguishing real causes (PDF→AZW3 conversion damage) from misattributed ones (blaming Kindle's PDF viewer)
 - `nano-pdf` skill — for editing PDF text content, not for reformatting
 - `ocr-and-documents` skill — for extracting text out of PDFs (different goal)
