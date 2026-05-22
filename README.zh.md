@@ -50,10 +50,12 @@
 
 ```
 skills/kindle-pdf-skill/
-├── SKILL.md                          # ~13k 字符——主操作手册
+├── SKILL.md                            # 主操作手册
 └── references/
-    ├── k2pdfopt-flags.md             # 全参数参考 + 设备速查表
-    └── security-policy-pitfalls.md   # macOS Gatekeeper、被拦截的 shell 模式
+    ├── k2pdfopt-flags.md               # 全参数参考 + 设备速查表
+    ├── physical-zoom-limits.md         # 为什么 -fs N 在 6 寸屏上不能给你 N 倍大的字
+    ├── diagnostic-attribution.md       # 真正的元凶（AZW3 转换）vs 被冤枉的（Kindle PDF 阅读器）
+    └── security-policy-pitfalls.md     # macOS Gatekeeper、被拦截的 shell 模式
 ```
 
 skill 涵盖：
@@ -61,7 +63,8 @@ skill 涵盖：
 - **诊断清单**——读取 PDF 元数据、识别故障模式、选对工具
 - **macOS 上 k2pdfopt 安装**——包括如何绕过 Gatekeeper 隔离
 - **各代 Kindle 的参数配方**——Paperwhite 1/2（212ppi）、PW3/4（300ppi）、PW5/Signature、Oasis、Scribe
-- **横屏 vs 竖屏输出的取舍**——何时用 `-ls-`，何时加 `-fs 1.2`
+- **6 寸设备 + 技术书默认横屏输出**——横屏姿势是 PW1-PW4 上读 ML/数学书的稳态答案，不是备选（物理限制，不是偏好问题）
+- **物理放大极限**——`-fs N` 在 6 寸屏读 7-8 寸源 PDF 时最多只能拿到 ~10-15% 的视觉增益；附数学推导与实测数据
 - **验证方法**——如何确认输出正确（以及为什么 `vision_analyze` 判断旋转不可信）
 - **完整避坑清单**——作者亲自踩过的每个雷，让你别再踩
 
@@ -137,6 +140,22 @@ Agent 会自动加载这个 skill。
 - **[Sebastian Raschka](https://sebastianraschka.com/)**——他的《Build a LLM from Scratch》是触发整件事的导火索
 - **[Anthropic](https://github.com/anthropics/skills)**、**[Matt Pocock](https://github.com/mattpocock/skills)**、**[JimLiu](https://github.com/JimLiu/baoyu-skills)**、**[multica-ai](https://github.com/multica-ai/andrej-karpathy-skills)**——开源 skill 仓库的最佳实践，本仓库结构跟它们学的
 - **[Hermes Agent](https://hermes-agent.nousresearch.com/)**——这个 skill 在它身上诞生
+
+## 更新日志
+
+### v1.1.0（2026-05-22）
+
+拿真实的 Paperwhite 2 跑了一遍 Sebastian Raschka 的《Build a LLM From Scratch》之后的「现实校准」版。
+
+- **6 寸设备 + 技术书的默认推荐现在是横屏输出**（不加 `-ls-`），而不是竖屏 + `-fs` 调参。之前的默认配置实际用下来用户反馈一直是「字还是太小」。横屏姿势用阅读舒适度换 ~35% 更大的字，是 PW1-PW4 上读 ML/数学书的稳态答案。
+- **新增坑：`-fs N` 不会给你 N 倍大的字**。在 6 寸设备上读 7-8 寸宽的源 PDF 时，页面宽度比是硬约束；`-fs 1.25` 在竖屏 fitwidth 模式下最多就 ~10-15% 视觉增益，过了这个就撞墙。数学推导和实测数据见 `references/physical-zoom-limits.md`。
+- **新增坑：k2pdfopt 在长书中途报「File or folder - could not be opened」失败**——通常是源 PDF 里有 MuPDF 渲染不了的嵌入对象。光 `qpdf --linearize` 不够，要用 `ghostscript -sDEVICE=pdfwrite` 完整重写一遍源文件再喂给 k2pdfopt。
+- **诊断归因更精细**——Kindle 屏幕上看到单列文字碎片，几乎**总是**因为用户做了 PDF→AZW3/MOBI 转换，**不是** Kindle 原生 PDF 阅读器搞砸的。结论之前要先问清楚。
+- **新增 references**：`physical-zoom-limits.md`、`diagnostic-attribution.md`。
+
+### v1.0.0（2026-05-17）
+
+首个版本。
 
 ## 协议
 

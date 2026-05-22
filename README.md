@@ -50,10 +50,12 @@ This skill encodes the exact recipe — flag combinations, device parameters, tr
 
 ```
 skills/kindle-pdf-skill/
-├── SKILL.md                          # ~13k chars — the main playbook
+├── SKILL.md                            # the main playbook
 └── references/
-    ├── k2pdfopt-flags.md             # Full flag reference + device cheat sheet
-    └── security-policy-pitfalls.md   # macOS Gatekeeper, blocked shell patterns
+    ├── k2pdfopt-flags.md               # Full flag reference + device cheat sheet
+    ├── physical-zoom-limits.md         # Why -fs N doesn't give N× bigger text on 6" devices
+    ├── diagnostic-attribution.md       # Real cause (AZW3 conversion) vs misattributed (Kindle PDF viewer)
+    └── security-policy-pitfalls.md     # macOS Gatekeeper, blocked shell patterns
 ```
 
 The skill covers:
@@ -61,7 +63,8 @@ The skill covers:
 - **Diagnostic checklist** — read the PDF metadata, identify the failure mode, pick the right tool
 - **k2pdfopt installation** on macOS, including how to get past Gatekeeper quarantine
 - **Recipes for every Kindle generation** — Paperwhite 1/2 (212ppi), PW3/4 (300ppi), PW5/Signature, Oasis, Scribe
-- **Landscape vs portrait output tradeoff** — when to use `-ls-`, when to bump `-fs 1.2`
+- **Landscape-first defaults for technical books on 6" devices** — landscape posture is the durable answer for ML/math books on PW1-PW4, not a fallback (physics, not preference)
+- **Physical zoom limits** — `-fs N` on a 6" device reading a 7-8" wide source can't deliver more than ~10-15% perceived gain; documented with math and real measurements
 - **Verification** — how to confirm the output is correct (and why `vision_analyze` lies about page orientation)
 - **Pitfalls section** — every mistake the author personally made, so you don't have to
 
@@ -137,6 +140,22 @@ Open an issue first for anything larger than a typo fix.
 - **[Sebastian Raschka](https://sebastianraschka.com/)** — whose excellent *Build a LLM from Scratch* book triggered this entire endeavour
 - **[Anthropic](https://github.com/anthropics/skills)**, **[Matt Pocock](https://github.com/mattpocock/skills)**, **[JimLiu](https://github.com/JimLiu/baoyu-skills)**, **[multica-ai](https://github.com/multica-ai/andrej-karpathy-skills)** — for the open-source skill conventions this repo follows
 - **[Hermes Agent](https://hermes-agent.nousresearch.com/)** — where this skill was forged
+
+## Changelog
+
+### v1.1.0 (2026-05-22)
+
+Reality-check release after running Sebastian Raschka's *Build a LLM From Scratch* on an actual Paperwhite 2.
+
+- **Default for 6" device + technical content is now landscape** (drop `-ls-`), not portrait + `-fs` tuning. The previous default consistently produced "still too small" feedback from real users. Landscape posture trades reading ergonomics for ~35% bigger text and is the durable answer for ML/math books on PW1-PW4.
+- **New pitfall: `-fs N` does NOT give N× bigger text** on a 6" device reading a 7-8" wide source PDF. The width ratio is the binding constraint; `-fs 1.25` nets ~10-15% perceived gain in portrait fitwidth mode, then hits a hard wall. See `references/physical-zoom-limits.md` for the math and real measurements.
+- **New pitfall: k2pdfopt fails mid-book with "File or folder - could not be opened"** on PDFs with embedded objects MuPDF can't render. `qpdf --linearize` alone isn't enough; pass the source through `ghostscript -sDEVICE=pdfwrite` first, then feed the cleaned PDF to k2pdfopt.
+- **Diagnostic attribution sharpened** — single-column-fragments on a Kindle screen almost always = user ran the PDF through an AZW3/MOBI converter, NOT Kindle's native PDF viewer mangling it. Ask before assuming.
+- **New references:** `physical-zoom-limits.md`, `diagnostic-attribution.md`.
+
+### v1.0.0 (2026-05-17)
+
+Initial release.
 
 ## License
 
